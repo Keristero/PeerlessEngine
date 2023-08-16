@@ -1,6 +1,6 @@
 
 
-class Kerengine{
+class PeerlessEngine{
     constructor(){
         this.next_id = 0
     }
@@ -33,4 +33,4 @@ class Kerengine{
 }
 
 
-export default new Kerengine()
+export default new PeerlessEngine()
