@@ -1,64 +1,49 @@
 class RollbackQueue{
     constructor(){
-        this.frame_limits = {past:60}
-        this.reset()
+        this.reset_everything()
     }
-    reset(){
-        //clear everything
-        this.present_frame = 0
-        this.present_predictions = {}
-        this.oldest_predictions = {}
-        this.queue = {}
+    reset_everything(){
+        this.states = {}
+        this.oldest_state;
+        this.limits = {
+            past_frames:60,
+            future_frames:60,
+        }
+        this.simulation = {
+            present_frame: 0
+        }
     }
-    rollback(target_frame){
-
+    add_state(frame_no,state){
+        //state should be an object containing the latest value of every possible input
+        if(frame_no > this.simulation.present_frame+this.limits.future_frames){
+            throw('rollback error, tried adding state too far in future')
+        }
+        if(frame_no < this.simulation.present_frame-this.limits.past_frames){
+            throw('rollback error, tried adding state too far in past')
+        }
+        this.states[frame_no] = state
+        if(!this.oldest_state){
+            this.oldest_state = state
+        }
     }
-    prune_queue(){
-        //remove frames beyond the past frame limit
-        for(let frame in this.queue){
-            if(frame < this.present_frame-this.frame_limits.past){
-                delete this.queue[frame]
+    advance_present_frame(){
+        this.simulation.present_frame++
+        let oldest_allowed_frame = this.simulation.present_frame-this.limits.past_frames
+        if(this.states[oldest_allowed_frame-1]){
+            this.oldest_state = this.states[oldest_allowed_frame-1]
+            delete this.states[oldest_allowed_frame-1]
+        }
+    }
+    read_present_predicted_state(){
+        return this.read_predicted_state(this.simulation.present_frame)
+    }
+    read_predicted_state(frame_no){
+        for(let i = frame_no; i > frame_no-this.limits.past_frames; i--){
+            if(this.states[i]){
+                return this.states[i]
             }
         }
-    }
-    advance_one_frame(){
-        this.present_frame++
-        this.present_predictions = this.predict_inputs(this.present_frame-1,this.present_frame,this.present_predictions)
-    }
-    add_inputs(frame,player_id,inputs){
-        if(!this.queue[frame]){
-            this.queue[frame] = {}
-        }
-        if(!this.queue[frame][player_id]){
-            this.queue[frame][player_id] = {}
-        }
-        for(let input_key in inputs){
-            let input_value = inputs[input_key]
-            this.queue[frame][player_id][input_key] = input_value
-        }
-    }
-    predict_inputs(start_frame,end_frame,previous_predictions = {}){
-        for(let i = start_frame; i <= end_frame; i++){
-            if(this.queue[i]){
-                for(let player_id in this.queue[i]){
-                    if(!previous_predictions[player_id]){
-                        previous_predictions[player_id] = {}
-                    }
-                    for(let input_key in this.queue[i][player_id]){
-                        let input_value = this.queue[i][player_id][input_key]
-                        //add last known input values for every input
-                        previous_predictions[player_id][input_key] = input_value
-                    }
-                }
-            }
-        }
-        return previous_predictions
-    }
-    read_present_predictions(){
-        return this.present_predictions
-    }
-    read_raw_inputs(frame,player_id){
-        return this.queue[frame][player_id]
+        return this.oldest_state
     }
 }
 
