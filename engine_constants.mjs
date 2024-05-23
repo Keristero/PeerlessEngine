@@ -1,3 +1,6 @@
 export const EVENTS = {
-    EID_CLICKED:0
+    EID_CLICKED:0,
+    EID_FORCE_UPDATE:1,
+    EID_ROLLBACK:2,
+    EID_DELETE_SNAPSHOT:3
 }

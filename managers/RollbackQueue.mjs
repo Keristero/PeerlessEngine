@@ -1,4 +1,5 @@
-
+import EventManager from './EventManager.mjs'
+import { EVENTS } from '../engine_constants.mjs';
 
 class RollbackQueue{
     constructor(){
@@ -8,7 +9,7 @@ class RollbackQueue{
         this.states = {}
         this.oldest_state;
         this.limits = {
-            past_frames:60,
+            past_frames:30,
             future_frames:60,
         }
         this.simulation = {
@@ -20,6 +21,9 @@ class RollbackQueue{
         for(let i = this.simulation.present_frame+1; i <= target_frame; i++){
             this.set_present_frame(i)
             //TODO Here we need to force the game to update!
+            EventManager.fire({
+                type:EVENTS.EID_FORCE_UPDATE
+            })
         }
     }
     set_present_frame(target_frame_number){
@@ -29,6 +33,10 @@ class RollbackQueue{
             //remove old states when advancing forward
             let old_frame_number = this.simulation.present_frame+i-this.limits.past_frames
             console.log('removing old frame',old_frame_number)
+            EventManager.fire({
+                type:EVENTS.EID_DELETE_SNAPSHOT,
+                target_frame:old_frame_number
+            })
             if(this.states[old_frame_number-1]){
                 this.oldest_state = this.states[old_frame_number-1]
                 delete this.states[old_frame_number-1]
@@ -63,6 +71,10 @@ class RollbackQueue{
     perform_rollback(rolback_frame){
         let pre_rollback_frame = this.simulation.present_frame
         this.set_present_frame(rolback_frame)
+        EventManager.fire({
+            type:EVENTS.EID_ROLLBACK,
+            target_frame:rolback_frame
+        })
         this.simulate_until(pre_rollback_frame)
     }
     add_state(frame_no,state){
@@ -86,10 +98,6 @@ class RollbackQueue{
             this.perform_rollback(frame_no-1)
         }
         //todo, emit rollback event if state is older or equal to present frame
-    }
-    //todo set present frame (will replace advance)
-    advance_present_frame(){
-        this.simulation.present_frame++
     }
     read_present_predicted_state(){
         return this.read_predicted_state(this.simulation.present_frame)
