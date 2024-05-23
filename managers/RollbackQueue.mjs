@@ -20,19 +20,18 @@ class RollbackQueue{
         console.warn(`simulating frames from ${this.simulation.present_frame} till ${target_frame}`)
         for(let i = this.simulation.present_frame+1; i <= target_frame; i++){
             this.set_present_frame(i)
-            //TODO Here we need to force the game to update!
             EventManager.fire({
                 type:EVENTS.EID_FORCE_UPDATE
             })
         }
     }
     set_present_frame(target_frame_number){
-        console.log('setting frame to ',target_frame_number)
+        //console.log('setting frame to ',target_frame_number)
         let delta = target_frame_number-this.simulation.present_frame
         for(let i = 0; i < delta; i++){
             //remove old states when advancing forward
             let old_frame_number = this.simulation.present_frame+i-this.limits.past_frames
-            console.log('removing old frame',old_frame_number)
+            //console.log('removing old frame',old_frame_number)
             EventManager.fire({
                 type:EVENTS.EID_DELETE_SNAPSHOT,
                 target_frame:old_frame_number

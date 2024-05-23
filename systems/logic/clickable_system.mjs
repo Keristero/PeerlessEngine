@@ -8,10 +8,6 @@ import EventManager from '../../managers/EventManager.mjs';
 import { EVENTS } from '../../engine_constants.mjs';
 
 
-//disable context menu
-window.addEventListener('contextmenu', event => {
-    event.preventDefault();
-});
 
 const mouseCursorQuery = defineQuery([Changed(InputMouseCursor)])
 const clickableQuery = defineQuery([Clickable,Position,Rectangle])

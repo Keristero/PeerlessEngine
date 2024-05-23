@@ -5,6 +5,7 @@ import CanvasManager from './managers/CanvasManager.mjs'
 import ReferenceTypeManager from './managers/ReferenceTypeManager.mjs'
 import VarietyManager from './managers/VarietyManager.mjs'
 import EventManager from './managers/EventManager.mjs'
+import InputManager from './managers/InputManager.mjs'
 
 import animation_system from './systems/logic/animation_system.mjs'
 import clickable_system from './systems/logic/clickable_system.mjs'
@@ -14,6 +15,7 @@ import node_system from './systems/logic/node_system.mjs'
 import debug_text_system from './systems/render/debug_text_system.mjs'
 
 import { EVENTS } from '../game/constants.mjs'
+import RollbackQueue from './managers/RollbackQueue.mjs'
 
 class Game {
     constructor(settings) {
@@ -54,7 +56,8 @@ export {
     CanvasManager,
     ReferenceTypeManager,
     VarietyManager,
-    EventManager
+    EventManager,
+    InputManager
 }
 export {
     animation_system,
