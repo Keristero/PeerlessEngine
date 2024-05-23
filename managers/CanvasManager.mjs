@@ -13,9 +13,9 @@ class CanvasManager{
         return this.canvas_layers.length
     }
     calculate_styles(){
-        for(let i in this.canvas_layers){
-            let canvas = this.canvas_layers[i]
-            canvas.style.zIndex = i 
+        for(let 層 in this.canvas_layers){
+            let canvas = this.canvas_layers[層]
+            canvas.style.zIndex = 層 
         }
     }
     create_canvas(width,height){
