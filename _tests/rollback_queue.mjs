@@ -19,7 +19,7 @@ describe('RollbackQueue', function () {
   describe('read_predicted_state', function () {
     it('should return the most recent state for the given frame number', function () {
       RollbackQueue.reset_everything()
-      let frame_no_a = 0
+      let frame_no_a = 1
       let frame_no_b = 10
       let frame_no_c = 20
       let predicted_frame = 15
@@ -44,9 +44,9 @@ describe('RollbackQueue', function () {
   describe('advance_present_frame', function () {
     it('should cause read_present_predicted_state to return newer state', function () {
       RollbackQueue.reset_everything()
-      let frame_no_a = 0
-      let frame_no_b = 1
-      let frame_no_c = 2
+      let frame_no_a = 1
+      let frame_no_b = 2
+      let frame_no_c = 3
       
       RollbackQueue.add_state(frame_no_a,{
         attack:false,
@@ -60,10 +60,74 @@ describe('RollbackQueue', function () {
         attack:true,
         defend:false,
       })
+      //default state
       let prediction = RollbackQueue.read_present_predicted_state()
       strictEqual(prediction.attack,false)
       strictEqual(prediction.defend,false)
       RollbackQueue.advance_present_frame()
+      //frame a
+      prediction = RollbackQueue.read_present_predicted_state()
+      strictEqual(prediction.attack,false)
+      strictEqual(prediction.defend,false)
+      RollbackQueue.advance_present_frame()
+      //frame b
+      prediction = RollbackQueue.read_present_predicted_state()
+      strictEqual(prediction.attack,true)
+      strictEqual(prediction.defend,true)
+      RollbackQueue.advance_present_frame()
+      //frame c
+      prediction = RollbackQueue.read_present_predicted_state()
+      strictEqual(prediction.attack,true)
+      strictEqual(prediction.defend,false)
+      RollbackQueue.advance_present_frame()
+    });
+  });
+  describe('add_state', function () {
+    it('should rollback when a new current state is added', function () {
+      RollbackQueue.reset_everything()
+      //add a state for frame 1
+      RollbackQueue.add_state(1,{
+        attack:true,
+        defend:true,
+      })
+      RollbackQueue.set_present_frame(2)
+      //set frame to frame 2, state should be there as expected
+      let prediction = RollbackQueue.read_present_predicted_state()
+      strictEqual(prediction.attack,true)
+      strictEqual(prediction.defend,true)
+
+      //rewrite frame 2
+      RollbackQueue.add_state(2,{
+        attack:false,
+        defend:false,
+      })
+      //we should see the new rolled back state
+      prediction = RollbackQueue.read_present_predicted_state()
+      strictEqual(prediction.attack,false)
+      strictEqual(prediction.defend,false)
+    });
+    it('should rollback when a older state is added', function () {
+      RollbackQueue.reset_everything()
+      //add a state for frame 1
+      RollbackQueue.add_state(1,{
+        attack:true,
+        defend:true,
+      })
+      RollbackQueue.set_present_frame(3)
+      //set frame to frame 3, state should be there as expected
+      let prediction = RollbackQueue.read_present_predicted_state()
+      strictEqual(prediction.attack,true)
+      strictEqual(prediction.defend,true)
+
+      //rewrite frame 2
+      RollbackQueue.add_state(2,{
+        attack:false,
+        defend:false,
+      })
+      //we should see the new rolled back state
+      prediction = RollbackQueue.read_present_predicted_state()
+      strictEqual(prediction.attack,false)
+      strictEqual(prediction.defend,false)
     });
   });
 });
