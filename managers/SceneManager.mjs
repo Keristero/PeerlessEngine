@@ -37,6 +37,12 @@ class SceneManager{
     }
     set_scene(scene_id){
         RollbackQueue.reset_everything()
+        if(this.current){
+            this.current.scene.scene_deactivated()
+        }
+        if(this.scenes[scene_id]){
+            this.scenes[scene_id].scene.scene_activated()
+        }
         this.current = this.scenes[scene_id]
     }
     rollback(target_frame){

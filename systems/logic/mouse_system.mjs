@@ -8,9 +8,6 @@ const movementQuery = defineQuery([InputMouseCursor])
 
 const system = world => {
     let state = RollbackQueue.read_present_predicted_state()
-
-    console.log(state)
-
     const ents = movementQuery(world)
     for (let i = 0; i < ents.length; i++) {
         const eid = ents[i]

@@ -6,6 +6,8 @@ import ReferenceTypeManager from './managers/ReferenceTypeManager.mjs'
 import VarietyManager from './managers/VarietyManager.mjs'
 import EventManager from './managers/EventManager.mjs'
 import InputManager from './managers/InputManager.mjs'
+import NetworkManager from './managers/TrysteroManager.mjs'
+import RollbackQueue from './managers/RollbackQueue.mjs'
 
 import animation_system from './systems/logic/animation_system.mjs'
 import clickable_system from './systems/logic/clickable_system.mjs'
@@ -14,8 +16,7 @@ import mouse_system from './systems/logic/mouse_system.mjs'
 import node_system from './systems/logic/node_system.mjs'
 import debug_text_system from './systems/render/debug_text_system.mjs'
 
-import { EVENTS } from '../game/constants.mjs'
-import RollbackQueue from './managers/RollbackQueue.mjs'
+import Scene from './classes/Scene.mjs'
 
 class Game {
     constructor(settings) {
@@ -57,7 +58,9 @@ export {
     ReferenceTypeManager,
     VarietyManager,
     EventManager,
-    InputManager
+    InputManager,
+    NetworkManager,
+    Scene
 }
 export {
     animation_system,

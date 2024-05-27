@@ -18,6 +18,9 @@ class Listener{
             }
         }
     }
+    remove_listener(listener){
+        this.children.splice(this.children.indexOf(listener),1)
+    }
 }
 
 const event_manager = new Listener()

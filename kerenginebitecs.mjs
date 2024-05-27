@@ -4,7 +4,7 @@
 import * as StandardModule from './libraries/bitecs.mjs'
 
 export function defineComponent(object) {
-    console.log('defineComponent, hahahahaha',object)
+    //console.log('defineComponent, hahahahaha',object)
     return StandardModule.defineComponent(object)
 }
 
