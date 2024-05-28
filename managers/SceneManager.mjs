@@ -35,13 +35,13 @@ class SceneManager{
             snapshots:{}
         }
     }
-    set_scene(scene_id){
+    set_scene(scene_id,activate_parameters){
         RollbackQueue.reset_everything()
         if(this.current){
             this.current.scene.scene_deactivated()
         }
         if(this.scenes[scene_id]){
-            this.scenes[scene_id].scene.scene_activated()
+            this.scenes[scene_id].scene.scene_activated(activate_parameters)
         }
         this.current = this.scenes[scene_id]
     }

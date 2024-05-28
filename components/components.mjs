@@ -28,6 +28,7 @@ export const Node = defineComponent({
     use_parent_position:Types.ui8
 })
 export const Clickable = defineComponent()
+export const Hidden = defineComponent()
 
 //Basic components
 //Resources

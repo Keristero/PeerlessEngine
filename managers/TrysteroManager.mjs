@@ -39,13 +39,15 @@ class NetworkManager{
         room.onPeerJoin((peer_id)=>{
             EventManager.fire({
                 type:EVENTS.EID_NETWORK_PEER_JOINED,
-                peer_id:peer_id
+                peer_id:peer_id,
+                room_name:room_name,
             })
         })
         room.onPeerLeave((peer_id)=>{
             EventManager.fire({
                 type:EVENTS.EID_NETWORK_PEER_LEFT,
-                peer_id:peer_id
+                peer_id:peer_id,
+                room_name:room_name,
             })
         })
         const [send_local_state, on_remote_state] = room.makeAction('local_state')
@@ -53,6 +55,7 @@ class NetworkManager{
             EventManager.fire({
                 type:EVENTS.EID_NETWORK_REMOTE_STATE,
                 peer_id:peer_id,
+                room_name:room_name,
                 state:state
             })
         })
