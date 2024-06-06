@@ -6,6 +6,7 @@ import RollbackQueue from './RollbackQueue.mjs'
 
 class SceneManager{
     constructor(starting_scene){
+        this.last_input_state
         this.current = starting_scene
         this.scenes = {}
         let rollback_handler = EventManager.on((event) => {
@@ -71,7 +72,12 @@ class SceneManager{
     update(is_resimulation=false){
         if(!is_resimulation){
             let inputs = InputManager.late_poll_state()
-            RollbackQueue.add_state(this.current.scene.world.frame+1,inputs)
+            let current_input_string = JSON.stringify(inputs)
+            if(this.last_input_state_string != current_input_string){
+                //only record input states when the state changes
+                RollbackQueue.add_state(this.current.scene.world.frame+1,inputs)
+            }
+            this.last_input_state_string = current_input_string
         }
         this.current.scene.update()
         this.snapshot_world()

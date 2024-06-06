@@ -45,6 +45,9 @@ export const Text = defineComponent({
     ctid:Types.ui16,
     font_size:Types.ui8
 })
+export const PeerId = defineComponent({
+    ctid:Types.ui16
+})
 
 //Other
 export const Rectangle = defineComponent({

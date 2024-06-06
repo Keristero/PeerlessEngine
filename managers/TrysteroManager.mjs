@@ -8,6 +8,12 @@ class NetworkManager{
         this.rooms = {}
         this.send_state_actions = {}
     }
+    get_peers(room_name){
+        return this?.rooms[room_name]?.getPeers()
+    }
+    get_own_id(room_name){
+        return this?.rooms[room_name]?.selfId
+    }
     async reached_socket_state(desired_state){
         let sockets = getRelaySockets()
         let retries = 3
