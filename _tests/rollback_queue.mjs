@@ -89,4 +89,23 @@ describe('RollbackQueue', function () {
       strictEqual(prediction.defend,false)
     });
   });
+  describe('add_state', function () {
+    it('should should allow complex states', function () {
+      RollbackQueue.reset_everything()
+      let frame_no = 0
+      RollbackQueue.add_state(frame_no,{
+        p1:{
+          attack:false,
+          defend:false,
+        },
+        p2:{
+          attack:true,
+          defend:false,
+        }
+      })
+      let prediction = RollbackQueue.read_present_predicted_state()
+      strictEqual(prediction.p1.attack,false)
+      strictEqual(prediction.p2.attack,true)
+    });
+  });
 });

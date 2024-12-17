@@ -101,7 +101,7 @@ class RollbackQueue{
     read_present_predicted_state(){
         return this.read_predicted_state(this.simulation.present_frame)
     }
-    read_predicted_state(frame_no){
+    read_predicted_state(frame_no,user_id){
         for(let i = frame_no; i > frame_no-this.limits.past_frames; i--){
             if(this.states[i]){
                 return this.states[i]
