@@ -1,17 +1,5 @@
 {
-  "mocha": {
-    "recursive": true,
-    "extension": [
-      "js",
-      "mjs"
-    ],
-    "spec": ["_tests/**/*"]
-  },
-  "scripts": {
-    "test": "mocha"
-  },
-  "devDependencies": {
-    "mocha": "^10.4.0",
-    "mocha-junit-reporter": "^2.2.1"
+  "dependencies": {
+    "bitecs": "^0.4.0"
   }
 }

@@ -1,0 +1,14 @@
+{
+  "lockfileVersion": 1,
+  "configVersion": 1,
+  "workspaces": {
+    "": {
+      "dependencies": {
+        "bitecs": "^0.4.0",
+      },
+    },
+  },
+  "packages": {
+    "bitecs": ["bitecs@0.4.0", "", {}, "sha512-ho6Zop/L79DRTnBAfakPpGPuX7y0+lAjX06CpaAW+5tnAc7BH3L3RlSrWAXAqwnQGDZ10GsoxaxyTTsddlun3g=="],
+  }
+}
