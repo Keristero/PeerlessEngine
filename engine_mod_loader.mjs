@@ -153,7 +153,6 @@ export function setup_mod_loader(engine){
 
     engine.activate_mod = async function(mod){
         if(mod.name && mod.activate){
-            console.log("activating mod",mod.name)
             const deps = {}
             for(const dep_name of (mod.dependencies || [])){
                 if(!engine.mods[dep_name]){
@@ -164,7 +163,6 @@ export function setup_mod_loader(engine){
             }
             await mod.activate(engine, engine.world, deps)
             engine.mods[mod.name] = mod
-            console.log("Activated mod",mod.name)
         }else{
             console.warn("Mod",mod,"is missing a name or activate function and will be skipped.")
         }
