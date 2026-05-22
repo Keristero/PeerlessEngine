@@ -10,11 +10,12 @@ const mod = {
 mod.activate = async function(engine,world){
     let {observe,onAdd,onSet,onRemove,registerComponent, addComponent, createRelation, makeExclusive} = engine.bitecs
 
-    let { Circle, Position2d, Velocity2d } = components
+    let { Circle, Position2d, Velocity2d, Rectangle } = components
     //register components
     registerComponent(world,Position2d)
     registerComponent(world,Velocity2d)
     registerComponent(world,Circle)
+    registerComponent(world,Rectangle)
 }
 
 export {mod}

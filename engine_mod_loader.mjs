@@ -63,7 +63,7 @@ export function setup_mod_loader(engine){
         engine.sort_systems()
     }
 
-    // Collect all systems from every loaded mod and sort them by their dependencies
+    // Collect all systems from every loaded mod, validate categories, and sort each category
     engine.sort_systems = function(){
         const all_systems = []
         for(const mod_name in engine.mods){
@@ -72,11 +72,42 @@ export function setup_mod_loader(engine){
                 all_systems.push(mod.systems[system_key])
             }
         }
-        engine.sorted_systems = engine.topological_sort(all_systems)
+
+        // Build name -> system map for validation
+        const by_name = {}
+        for(const system of all_systems) by_name[system.name] = system
+
+        // Validate: every system must have a category, and no cross-category dependencies
+        for(const system of all_systems){
+            if(!system.category){
+                throw new Error(`System "${system.name}" is missing a required "category" field.`)
+            }
+            for(const dep_name of (system.dependencies || [])){
+                const dep = by_name[dep_name]
+                if(dep && dep.category !== system.category){
+                    throw new Error(
+                        `System "${system.name}" (category: "${system.category}") cannot depend on "${dep_name}" (category: "${dep.category}"). Cross-category dependencies are not allowed — systems in different categories run on independent schedules.`
+                    )
+                }
+            }
+        }
+
+        // Group by category, then topologically sort each group independently
+        const by_category = {}
+        for(const system of all_systems){
+            if(!by_category[system.category]) by_category[system.category] = []
+            by_category[system.category].push(system)
+        }
+
+        engine.sorted_systems = {}
+        for(const category in by_category){
+            engine.sorted_systems[category] = engine.topological_sort(by_category[category])
+        }
     }
 
-    engine.update_systems = function(){
-        for(const system of engine.sorted_systems){
+    engine.update_systems = function(category){
+        const systems = engine.sorted_systems[category] || []
+        for(const system of systems){
             system.run(engine, engine.world)
         }
     }

@@ -12,4 +12,9 @@ const Circle = {
     radius: [],
 }
 
-export { Position2d, Velocity2d, Circle}
+const Rectangle = {
+    width: [],
+    height: [],
+}
+
+export { Position2d, Velocity2d, Circle, Rectangle}
