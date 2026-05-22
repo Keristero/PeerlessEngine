@@ -4,7 +4,10 @@ const Canvas = {
     page_y:[],
     width:[],
     height:[],
-    dom_id:[]
 }
 
-export { Canvas }
+const DomReference = {
+    dom_id: []
+}
+
+export { Canvas, DomReference}
