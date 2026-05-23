@@ -220,3 +220,153 @@ describe('activate_mod', () => {
         assert.equal(warnings.length, 1)
     })
 })
+
+// ─── component_ownership ──────────────────────────────────────────────────────
+
+describe('component_ownership', () => {
+
+    it('registers ownership when a system declares "writes"', () => {
+        const comp = { x: [], y: [] }
+        const sys = { name: 'sys', category: 'physics', dependencies: [], writes: ['MyComp'] }
+        const engine = make_engine({ mod_a: { systems: { sys }, components: { MyComp: comp } } })
+        engine.sort_systems()
+        assert.equal(engine._component_owner.get(comp), 'sys')
+    })
+
+    it('throws when two systems declare writes for the same component', () => {
+        const comp = { x: [] }
+        const sysA = { name: 'sysA', category: 'physics', dependencies: [], writes: ['MyComp'] }
+        const sysB = { name: 'sysB', category: 'physics', dependencies: [], writes: ['MyComp'] }
+        const engine = make_engine({ mod_a: { systems: { sysA, sysB }, components: { MyComp: comp } } })
+        assert.throws(() => engine.sort_systems(), /already owned/)
+    })
+
+    it('warns and continues when writes references an unknown component name', () => {
+        const warnings = []
+        const orig = console.warn
+        console.warn = (...args) => warnings.push(args.join(' '))
+        const sys = { name: 'sys', category: 'physics', dependencies: [], writes: ['Ghost'] }
+        const engine = make_engine({ mod_a: { systems: { sys }, components: {} } })
+        assert.doesNotThrow(() => engine.sort_systems())
+        console.warn = orig
+        assert.ok(warnings.some(w => w.includes('Ghost')))
+    })
+
+    it('queues a write from a non-owning system instead of applying it immediately', () => {
+        const comp = { x: [] }
+        comp.x[0] = 0
+        const owner = { name: 'owner', category: 'physics', dependencies: [], writes: ['MyComp'], run: () => {} }
+        const engine = make_engine({ mod_a: { systems: { owner }, components: { MyComp: comp } } })
+        engine.sort_systems()
+
+        // Simulate a non-owning system writing
+        engine._current_system = 'other'
+        comp.x[0] = 99
+        engine._current_system = null
+
+        assert.equal(comp.x[0], 0, 'value must not change immediately')
+        const queued = engine._pending_writes.get(comp)?.get(0)?.get('x')
+        assert.equal(queued, 99, 'value must be in the pending queue')
+    })
+
+    it('allows direct writes when there is no current system (_current_system = null)', () => {
+        const comp = { x: [] }
+        comp.x[0] = 0
+        const sys = { name: 'sys', category: 'physics', dependencies: [], writes: ['MyComp'], run: () => {} }
+        const engine = make_engine({ mod_a: { systems: { sys }, components: { MyComp: comp } } })
+        engine.sort_systems()
+
+        // No current system → direct write (setup, activate, test code path)
+        comp.x[0] = 42
+        assert.equal(comp.x[0], 42, 'direct write should work outside a tick')
+    })
+
+    it('applies queued writes before the owning system runs', () => {
+        const comp = { x: [] }
+        comp.x[0] = 0
+        let seen_value_at_run_start
+        const owner = {
+            name: 'owner', category: 'physics', dependencies: [], writes: ['MyComp'],
+            run: (engine) => { seen_value_at_run_start = comp.x[0] }
+        }
+        const engine = make_engine({ mod_a: { systems: { owner }, components: { MyComp: comp } } })
+        engine.sorted_systems = { physics: [owner] }
+        engine.sort_systems()
+
+        // Queue a write from a non-owning context
+        engine._current_system = 'someone_else'
+        comp.x[0] = 77
+        engine._current_system = null
+
+        assert.equal(comp.x[0], 0, 'not yet applied')
+        engine.update_systems('physics')
+        assert.equal(seen_value_at_run_start, 77, 'queued write must be applied before run()')
+    })
+
+    it('last write to the same eid+prop wins when multiple are queued', () => {
+        const comp = { x: [] }
+        comp.x[0] = 0
+        const owner = { name: 'owner', category: 'physics', dependencies: [], writes: ['MyComp'], run: () => {} }
+        const engine = make_engine({ mod_a: { systems: { owner }, components: { MyComp: comp } } })
+        engine.sort_systems()
+
+        engine._current_system = 'other'
+        comp.x[0] = 10
+        comp.x[0] = 20
+        comp.x[0] = 30
+        engine._current_system = null
+
+        engine._current_system = 'owner'
+        engine._apply_pending_for('owner')
+        engine._current_system = null
+        assert.equal(comp.x[0], 30, 'last queued write must win')
+    })
+
+    it('get_pending_value returns the latest pending value for a component property', () => {
+        const comp = { x: [] }
+        comp.x[0] = 10
+        const owner = { name: 'owner', category: 'physics', dependencies: [], writes: ['MyComp'], run: () => {} }
+        const engine = make_engine({ mod_a: { systems: { owner }, components: { MyComp: comp } } })
+        engine.sort_systems()
+
+        engine._current_system = 'other'
+        comp.x[0] = 99
+        engine._current_system = null
+
+        assert.equal(engine.get_pending_value(0, comp, 'x'), 99)
+    })
+
+    it('get_pending_value returns undefined when no write is pending', () => {
+        const comp = { x: [] }
+        comp.x[0] = 10
+        const owner = { name: 'owner', category: 'physics', dependencies: [], writes: ['MyComp'], run: () => {} }
+        const engine = make_engine({ mod_a: { systems: { owner }, components: { MyComp: comp } } })
+        engine.sort_systems()
+
+        assert.equal(engine.get_pending_value(0, comp, 'x'), undefined)
+    })
+
+    it('get_pending_delta returns (pending - current) for a numeric property', () => {
+        const comp = { x: [] }
+        comp.x[0] = 10
+        const owner = { name: 'owner', category: 'physics', dependencies: [], writes: ['MyComp'], run: () => {} }
+        const engine = make_engine({ mod_a: { systems: { owner }, components: { MyComp: comp } } })
+        engine.sort_systems()
+
+        engine._current_system = 'other'
+        comp.x[0] = 15   // pending: 15, current committed: 10
+        engine._current_system = null
+
+        assert.equal(engine.get_pending_delta(0, comp, 'x'), 5)
+    })
+
+    it('get_pending_delta returns 0 when no write is pending', () => {
+        const comp = { x: [] }
+        comp.x[0] = 10
+        const owner = { name: 'owner', category: 'physics', dependencies: [], writes: ['MyComp'], run: () => {} }
+        const engine = make_engine({ mod_a: { systems: { owner }, components: { MyComp: comp } } })
+        engine.sort_systems()
+
+        assert.equal(engine.get_pending_delta(0, comp, 'x'), 0)
+    })
+})
