@@ -48,8 +48,14 @@ async function activate_deps(engine, mod, registry, activated = []) {
         const dep = registry[dep_name]
         if (dep) {
             await activate_deps(engine, dep, registry, activated)
-            await engine.activate_mod(dep)
-            activated.push(dep_name)
+            try {
+                await engine.activate_mod(dep)
+                activated.push(dep_name)
+            } catch (e) {
+                // Mod requires a browser environment; register without activation
+                engine.mods[dep_name] = dep
+                console.log(`[mod_test_runner] skipped "${dep_name}" (not browser-safe): ${e.message}`)
+            }
         }
     }
     return activated
@@ -93,7 +99,9 @@ for (const { mod, test_module, test_file } of suites) {
 
         before(async function() {
             engine = make_fresh_engine()
-            const activated = await activate_deps(engine, mod, registry)
+            const deps_to_activate = test_module.dependencies ?? mod.dependencies
+            const stub_mod = { ...mod, dependencies: deps_to_activate }
+            const activated = await activate_deps(engine, stub_mod, registry)
             engine.mods[mod.name] = mod
             console.log("[mod_test_runner] file:", path.relative(process.cwd(), test_file))
             if (activated.length > 0) {

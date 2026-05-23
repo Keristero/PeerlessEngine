@@ -8,6 +8,7 @@ const mod = {
 }
 
 mod.activate = async function(engine,world){
+    if (typeof window === "undefined") throw new Error("canvas mod requires a browser environment (window is not defined)")
     let {observe,onAdd,onSet,onRemove,registerComponent, addComponent, createRelation, makeExclusive} = engine.bitecs
     //register components
     registerComponent(world,Canvas)
