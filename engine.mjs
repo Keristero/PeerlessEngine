@@ -4,7 +4,7 @@ import { setup_mod_loader } from './engine_mod_loader.mjs'
 const {addComponent,addEntity} = bitecs
 
 const engine = {
-    bitecs:bitecs,
+    bitecs: bitecs,
     world:undefined,
     mods:{},
     sorted_systems:[]

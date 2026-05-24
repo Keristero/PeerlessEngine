@@ -50,8 +50,19 @@ export function setup_mod_loader_core(engine) {
         return files
     }
 
+    // Call load() on every activated mod (if defined), in activation order.
+    // Must be called after all activate_mod() calls and sort_systems(), and
+    // before the first game tick.  The pool mod uses this to pre-fill pools.
+    engine.load_mods = async function() {
+        for (const mod of Object.values(engine.mods)) {
+            if (typeof mod.load === 'function') {
+                await mod.load(engine, engine.world)
+            }
+        }
+    }
+
     // Import every .mjs file found in folder_path, sort by dependency order,
-    // activate each mod, then sort all systems.
+    // activate each mod, sort all systems, then call load() on each mod.
     engine.find_and_load_mods = async function(folder_path) {
         const mod_paths = await engine.recursive_directory_scan(folder_path, ".mjs", 1)
         const unordered = []
@@ -65,5 +76,6 @@ export function setup_mod_loader_core(engine) {
             await engine.activate_mod(mod)
         }
         engine.sort_systems()
+        await engine.load_mods()
     }
 }

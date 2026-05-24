@@ -109,13 +109,12 @@ export const tests = {
     // ── Degenerate case ─────────────────────────────────────────────────────
 
     'degenerate: ball on top-wall bottom edge bounces Y not X': (engine, world) => {
-        const { addComponent } = engine.bitecs
-        const { Velocity2d, Moved } = engine.mods.twodee.components
+        const { Velocity2d } = engine.mods.twodee.components
         const ball = make_ball(engine, world, { x: 400, y: 0, vx: 0, vy: -4 })
         const wall = make_wall(engine, world, { x: -20, y: -20, w: 840, h: 20 })
-        addComponent(world, ball, Moved)
-        Moved.dx[ball] = 0
-        Moved.dy[ball] = -4
+        engine.mods.twodee.systems.physicsSystem.moved_eids.add(ball)
+        engine.mods.twodee.systems.physicsSystem.move_dx[ball] = 0
+        engine.mods.twodee.systems.physicsSystem.move_dy[ball] = -4
         set_collision(engine, ball, wall)
         run(engine, world)
         assert.ok(Velocity2d.y[ball] > 0, `expected vy > 0 (y-flip), got ${Velocity2d.y[ball]}`)
@@ -123,13 +122,12 @@ export const tests = {
     },
 
     'degenerate: ball on left-wall right edge bounces X not Y': (engine, world) => {
-        const { addComponent } = engine.bitecs
-        const { Velocity2d, Moved } = engine.mods.twodee.components
+        const { Velocity2d } = engine.mods.twodee.components
         const ball = make_ball(engine, world, { x: 0, y: 100, vx: -4, vy: 0 })
         const wall = make_wall(engine, world, { x: -20, y: -20, w: 20, h: 640 })
-        addComponent(world, ball, Moved)
-        Moved.dx[ball] = -4
-        Moved.dy[ball] = 0
+        engine.mods.twodee.systems.physicsSystem.moved_eids.add(ball)
+        engine.mods.twodee.systems.physicsSystem.move_dx[ball] = -4
+        engine.mods.twodee.systems.physicsSystem.move_dy[ball] = 0
         set_collision(engine, ball, wall)
         run(engine, world)
         assert.ok(Velocity2d.x[ball] > 0, `expected vx > 0 (x-flip), got ${Velocity2d.x[ball]}`)

@@ -252,17 +252,14 @@ describe('component_ownership', () => {
         assert.ok(warnings.some(w => w.includes('Ghost')))
     })
 
-    it('queues a write from a non-owning system instead of applying it immediately', () => {
+    it('queues a write via explicit _queue_write instead of applying it immediately', () => {
         const comp = { x: [] }
         comp.x[0] = 0
         const owner = { name: 'owner', category: 'physics', dependencies: [], writes: ['MyComp'], run: () => {} }
         const engine = make_engine({ mod_a: { systems: { owner }, components: { MyComp: comp } } })
         engine.sort_systems()
 
-        // Simulate a non-owning system writing
-        engine._current_system = 'other'
-        comp.x[0] = 99
-        engine._current_system = null
+        engine._queue_write(0, comp, 'x', 99)
 
         assert.equal(comp.x[0], 0, 'value must not change immediately')
         const queued = engine._pending_writes.get(comp)?.get(0)?.get('x')
@@ -293,10 +290,7 @@ describe('component_ownership', () => {
         engine.sorted_systems = { physics: [owner] }
         engine.sort_systems()
 
-        // Queue a write from a non-owning context
-        engine._current_system = 'someone_else'
-        comp.x[0] = 77
-        engine._current_system = null
+        engine._queue_write(0, comp, 'x', 77)
 
         assert.equal(comp.x[0], 0, 'not yet applied')
         engine.update_systems('physics')
@@ -310,15 +304,11 @@ describe('component_ownership', () => {
         const engine = make_engine({ mod_a: { systems: { owner }, components: { MyComp: comp } } })
         engine.sort_systems()
 
-        engine._current_system = 'other'
-        comp.x[0] = 10
-        comp.x[0] = 20
-        comp.x[0] = 30
-        engine._current_system = null
+        engine._queue_write(0, comp, 'x', 10)
+        engine._queue_write(0, comp, 'x', 20)
+        engine._queue_write(0, comp, 'x', 30)
 
-        engine._current_system = 'owner'
         engine._apply_pending_for('owner')
-        engine._current_system = null
         assert.equal(comp.x[0], 30, 'last queued write must win')
     })
 
@@ -329,9 +319,7 @@ describe('component_ownership', () => {
         const engine = make_engine({ mod_a: { systems: { owner }, components: { MyComp: comp } } })
         engine.sort_systems()
 
-        engine._current_system = 'other'
-        comp.x[0] = 99
-        engine._current_system = null
+        engine._queue_write(0, comp, 'x', 99)
 
         assert.equal(engine.get_pending_value(0, comp, 'x'), 99)
     })
@@ -353,9 +341,7 @@ describe('component_ownership', () => {
         const engine = make_engine({ mod_a: { systems: { owner }, components: { MyComp: comp } } })
         engine.sort_systems()
 
-        engine._current_system = 'other'
-        comp.x[0] = 15   // pending: 15, current committed: 10
-        engine._current_system = null
+        engine._queue_write(0, comp, 'x', 15)  // pending: 15, current committed: 10
 
         assert.equal(engine.get_pending_delta(0, comp, 'x'), 5)
     })

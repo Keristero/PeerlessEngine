@@ -16,7 +16,8 @@ const system = {
     dependencies: ["collisionSystem"],
     run: function (engine, world) {
         const { addComponent, hasComponent } = engine.bitecs
-        const { Position2d, Velocity2d, Circle, Rectangle, Moved } = engine.mods.twodee.components
+        const { Position2d, Velocity2d, Circle, Rectangle } = engine.mods.twodee.components
+        const { moved_eids, move_dx, move_dy } = engine.mods.twodee.systems.physicsSystem
         const {
             ColliderResponseSeparate,
             ColliderResponseBounce,
@@ -27,16 +28,7 @@ const system = {
         } = engine.mods.collision_response.components
         const { active_collisions } = engine.mods.collision
 
-        for (const [a, b] of active_collisions) {
-            // Identify which entity is the moving collider.
-            let collider, collidee
-            if (hasComponent(world, a, Circle) && hasComponent(world, a, Velocity2d)) {
-                collider = a; collidee = b
-            } else if (hasComponent(world, b, Circle) && hasComponent(world, b, Velocity2d)) {
-                collider = b; collidee = a
-            } else {
-                continue
-            }
+        for (const [collider, collidee] of active_collisions) {
 
             // ── ColliderResponseSeparate ─────────────────────────────────────
             // SAT push-out: move the collider out of any remaining overlap.
@@ -59,10 +51,10 @@ const system = {
                     if (dist === 0) {
                         // Degenerate: ball centre exactly on the edge.
                         // Use last frame movement to determine the push direction.
-                        const mdx = hasComponent(world, collider, Moved)
-                            ? Moved.dx[collider] : Velocity2d.x[collider]
-                        const mdy = hasComponent(world, collider, Moved)
-                            ? Moved.dy[collider] : Velocity2d.y[collider]
+                        const mdx = moved_eids.has(collider)
+                            ? move_dx[collider] : Velocity2d.x[collider]
+                        const mdy = moved_eids.has(collider)
+                            ? move_dy[collider] : Velocity2d.y[collider]
                         if (Math.abs(mdx) >= Math.abs(mdy)) {
                             Position2d.x[collider] += mdx < 0 ? penetration : -penetration
                         } else {
@@ -102,10 +94,10 @@ const system = {
                     let bounce_on_x
                     if (dx === 0 && dy === 0) {
                         // Degenerate: use movement history to pick the flip axis.
-                        const mdx = hasComponent(world, collider, Moved)
-                            ? Moved.dx[collider] : Velocity2d.x[collider]
-                        const mdy = hasComponent(world, collider, Moved)
-                            ? Moved.dy[collider] : Velocity2d.y[collider]
+                        const mdx = moved_eids.has(collider)
+                            ? move_dx[collider] : Velocity2d.x[collider]
+                        const mdy = moved_eids.has(collider)
+                            ? move_dy[collider] : Velocity2d.y[collider]
                         bounce_on_x = Math.abs(mdx) >= Math.abs(mdy)
                     } else {
                         bounce_on_x = Math.abs(dx) >= Math.abs(dy)

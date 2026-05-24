@@ -17,6 +17,4 @@ const Rectangle = {
     height: [],
 }
 
-const Moved = { dx: [], dy: [] }
-
-export { Position2d, Velocity2d, Circle, Rectangle, Moved }
+export { Position2d, Velocity2d, Circle, Rectangle }

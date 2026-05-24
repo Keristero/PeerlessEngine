@@ -55,24 +55,29 @@ const system = {
     category: "physics",
     dependencies: ["physicsSystem"],
     run: function (engine, world) {
-        const { query, addComponent, removeComponent } = engine.bitecs
-        const { Position2d, Circle, Rectangle, Moved } = engine.mods.twodee.components
+        const { query, hasComponent, Not } = engine.bitecs
+        const { Position2d, Circle, Rectangle } = engine.mods.twodee.components
         const { Collision } = engine.mods.collision.components
-        const { Colliding, active_collisions, layers } = engine.mods.collision
+        const { active_collisions, layers } = engine.mods.collision
 
-        // Collect entities that moved this tick
-        const moved_eids = new Set(query(world, [Collision, Position2d, Moved]))
+        const Destroyed = engine.mods.collision_response?.components?.Destroyed
+        const not_destroyed = Destroyed ? [Not(Destroyed)] : []
 
-        // Clear previous collision relationships
-        for (const [a, b] of active_collisions) {
-            try { removeComponent(world, a, Colliding(b)) } catch (_) {}
-            try { removeComponent(world, b, Colliding(a)) } catch (_) {}
+        // Collect entities that moved this tick and have a Collision component.
+        const { moved_eids: all_moved, move_dx, move_dy } = engine.mods.twodee.systems.physicsSystem
+        const moved_eids = new Set()
+        for (const eid of all_moved) {
+            if (!hasComponent(world, eid, Collision)) continue
+            if (Destroyed && hasComponent(world, eid, Destroyed)) continue
+            moved_eids.add(eid)
         }
+
         engine.mods.collision.active_collisions = []
+        engine.mods.collision.colliding_with = new Map()
 
         // Build shape-type sets once per tick
-        const circle_eids = new Set(query(world, [Circle, Collision]))
-        const rect_eids   = new Set(query(world, [Rectangle, Collision]))
+        const circle_eids = new Set(query(world, [Circle, Collision, ...not_destroyed]))
+        const rect_eids   = new Set(query(world, [Rectangle, Collision, ...not_destroyed]))
 
         for (const layer of Object.values(layers)) {
             const { cell_size } = layer
@@ -80,7 +85,7 @@ const system = {
             // Per-category grid: Map<category_int, Map<cell_string, Set<eid>>>
             const grid = new Map()
 
-            for (const eid of query(world, [Collision, Position2d])) {
+            for (const eid of query(world, [Collision, Position2d, ...not_destroyed])) {
                 if (Collision.layer_id[eid] !== layer.id) continue
                 const x = Position2d.x[eid]
                 const y = Position2d.y[eid]
@@ -102,13 +107,12 @@ const system = {
                 }
             }
 
-            const checked_pairs = new Set()
             for (const eid of moved_eids) {
                 if (Collision.layer_id[eid] !== layer.id) continue
                 const x   = Position2d.x[eid]
                 const y   = Position2d.y[eid]
-                const mdx = Moved.dx[eid] ?? 0
-                const mdy = Moved.dy[eid] ?? 0
+                const mdx = move_dx[eid] ?? 0
+                const mdy = move_dy[eid] ?? 0
                 const eid_mask = Collision.mask[eid] || 0xFFFF
 
                 let search_cells
@@ -149,14 +153,13 @@ const system = {
                 }
 
                 for (const other of candidates) {
-                    const pair_key = eid < other ? `${eid}_${other}` : `${other}_${eid}`
-                    if (checked_pairs.has(pair_key)) continue
-                    checked_pairs.add(pair_key)
-
                     if (shapes_overlap(eid, other, circle_eids, rect_eids, Position2d, Circle, Rectangle)) {
-                        addComponent(world, eid, Colliding(other))
-                        addComponent(world, other, Colliding(eid))
                         engine.mods.collision.active_collisions.push([eid, other])
+                        const cw = engine.mods.collision.colliding_with
+                        if (!cw.has(eid))   cw.set(eid,   new Set())
+                        if (!cw.has(other)) cw.set(other, new Set())
+                        cw.get(eid).add(other)
+                        cw.get(other).add(eid)
                     }
                 }
             }

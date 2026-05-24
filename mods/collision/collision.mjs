@@ -12,17 +12,15 @@ const mod = {
 }
 
 mod.activate = async function (engine, world) {
-    const { registerComponent, createRelation } = engine.bitecs
+    const { registerComponent } = engine.bitecs
     const { Collision } = components
 
     registerComponent(world, Collision)
 
-    mod.Colliding = createRelation()
-    mod.relationships.Colliding = mod.Colliding
-
     mod._next_layer_id = 1
     mod.layers = {}
     mod.active_collisions = []
+    mod.colliding_with = new Map()
 }
 
 // Allocates a unique power-of-2 bit for each named group.

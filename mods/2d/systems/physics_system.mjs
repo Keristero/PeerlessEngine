@@ -2,23 +2,28 @@ const system = {
     name: "physicsSystem",
     category: "physics",
     dependencies: [],
-    writes: ["Position2d", "Velocity2d", "Moved"],
+    writes: ["Position2d", "Velocity2d"],
     run: function (engine, world) {
-        const { query, addComponent, removeComponent } = engine.bitecs
-        const { Position2d, Velocity2d, Moved } = engine.mods.twodee.components
-        // Clear last tick's Moved tags before updating positions
-        for (const eid of query(world, [Moved])) {
-            removeComponent(world, eid, Moved)
-        }
-        for (const eid of query(world, [Position2d, Velocity2d])) {
-            if (Velocity2d.x[eid] === 0 && Velocity2d.y[eid] === 0) continue
+        const { query, asBuffer, Not } = engine.bitecs
+        const { Position2d, Velocity2d } = engine.mods.twodee.components
+        const Destroyed = engine.mods.collision_response?.components?.Destroyed
+        const not_destroyed = Destroyed ? [Not(Destroyed)] : []
+
+        const twodee = engine.mods.twodee
+        const physics = twodee.systems.physicsSystem
+        physics.moved_eids.clear()
+
+        const moving = query(world, [Position2d, Velocity2d, ...not_destroyed], asBuffer)
+        for (let i = 0; i < moving.length; i++) {
+            const eid = moving[i]
             const vx = Velocity2d.x[eid]
             const vy = Velocity2d.y[eid]
+            if (vx === 0 && vy === 0) continue
             Position2d.x[eid] += vx
             Position2d.y[eid] += vy
-            addComponent(world, eid, Moved)
-            Moved.dx[eid] = vx
-            Moved.dy[eid] = vy
+            physics.moved_eids.add(eid)
+            physics.move_dx[eid] = vx
+            physics.move_dy[eid] = vy
         }
     }
 }

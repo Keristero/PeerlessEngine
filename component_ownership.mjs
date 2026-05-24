@@ -85,24 +85,8 @@ export function setup_component_ownership(engine) {
             }
         }
 
-        // Replace each owned component array with a write-guard Proxy.
-        // Writes from the owning system (or outside a tick) pass through directly;
-        // writes from any other system are stored as pending.
-        for (const [comp, owner] of engine._component_owner.entries()) {
-            for (const prop of Object.keys(comp)) {
-                const arr = comp[prop]
-                if (!Array.isArray(arr)) continue
-                comp[prop] = new Proxy(arr, {
-                    set(target, index, value) {
-                        if (!engine._current_system || engine._current_system === owner) {
-                            target[index] = value
-                        } else {
-                            engine._queue_write(Number(index), comp, prop, value)
-                        }
-                        return true
-                    }
-                })
-            }
-        }
+        // Write-guard proxies have been removed in favour of explicit engine._queue_write()
+        // calls at sites that genuinely need cross-system deferred writes.
+        // The ownership map is kept for reference and for _apply_pending_for.
     }
 }
