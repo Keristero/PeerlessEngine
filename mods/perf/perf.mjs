@@ -67,7 +67,6 @@ mod.activate = async function (engine, _world) {
         const systems = engine.sorted_systems[category] || []
         for (const system of systems) {
             engine._current_system = system.name
-            engine._apply_pending_for(system.name)
 
             const t0      = performance.now()
             system.run(engine, engine.world)

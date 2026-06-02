@@ -1,0 +1,3 @@
+const Clickable = {}
+
+export { Clickable }

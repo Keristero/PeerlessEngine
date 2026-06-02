@@ -62,7 +62,8 @@ export function setup_mod_loader_core(engine) {
     }
 
     // Import every .mjs file found in folder_path, sort by dependency order,
-    // activate each mod, sort all systems, then call load() on each mod.
+    // and activate each mod.  Callers are responsible for calling sort_systems()
+    // and load_mods() once after all find_and_load_mods() calls have completed.
     engine.find_and_load_mods = async function(folder_path) {
         const mod_paths = await engine.recursive_directory_scan(folder_path, ".mjs", 1)
         const unordered = []
@@ -75,7 +76,5 @@ export function setup_mod_loader_core(engine) {
         for (const mod of sorted) {
             await engine.activate_mod(mod)
         }
-        engine.sort_systems()
-        await engine.load_mods()
     }
 }

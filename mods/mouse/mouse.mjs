@@ -1,6 +1,9 @@
+import mouseRawInputSystem from "./systems/mouse_raw_input_system.mjs"
+
 const mod = {
     name: "mouse",
-    dependencies: [],
+    dependencies: ["events"],
+    systems: { mouseRawInputSystem },
     device: {},
 }
 
@@ -23,6 +26,8 @@ mod.activate = function (engine, world) {
         },
         read_pressed:  (key) => btn_pressed[key]  ?? 0,
         read_released: (key) => btn_released[key] ?? 0,
+        each_pressed(cb)  { for (const k in btn_pressed)  if (btn_pressed[k])  cb(k) },
+        each_released(cb) { for (const k in btn_released) if (btn_released[k]) cb(k) },
         flush() {
             _x_delta = 0
             _y_delta = 0

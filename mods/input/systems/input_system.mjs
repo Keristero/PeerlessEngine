@@ -1,7 +1,7 @@
 const system = {
     name: "inputSystem",
     category: "input",
-    dependencies: [],
+    dependencies: ["mouseRawInputSystem", "keyboardRawInputSystem"],
     run: function (engine, world) {
         const mod = engine.mods.input
         if (!mod.mappings.length) return

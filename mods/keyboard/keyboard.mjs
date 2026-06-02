@@ -1,6 +1,9 @@
+import keyboardRawInputSystem from "./systems/keyboard_raw_input_system.mjs"
+
 const mod = {
     name: "keyboard",
-    dependencies: [],
+    dependencies: ["events"],
+    systems: { keyboardRawInputSystem },
     device: {},
 }
 
@@ -15,6 +18,8 @@ mod.activate = function (engine, world) {
         read:          (key) => key_state[key]  ?? 0,
         read_pressed:  (key) => key_pressed[key]  ?? 0,
         read_released: (key) => key_released[key] ?? 0,
+        each_pressed(cb)  { for (const k in key_pressed)  if (key_pressed[k])  cb(k) },
+        each_released(cb) { for (const k in key_released) if (key_released[k]) cb(k) },
         flush() {
             for (const k in key_pressed)  key_pressed[k]  = 0
             for (const k in key_released) key_released[k] = 0

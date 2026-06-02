@@ -1,8 +1,7 @@
 const system = {
     name: "physicsSystem",
     category: "physics",
-    dependencies: [],
-    writes: ["Position2d", "Velocity2d"],
+    dependencies: ["relativeToSystem"],
     run: function (engine, world) {
         const { query, asBuffer, Not } = engine.bitecs
         const { Position2d, Velocity2d } = engine.mods.twodee.components
